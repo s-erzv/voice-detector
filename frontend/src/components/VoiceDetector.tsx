@@ -185,6 +185,7 @@ const VoiceDetector = () => {
               <div className="text-center space-y-1">
                 <h3 className="text-lg font-bold text-slate-200">Upload Recording</h3>
                 <p className="text-slate-500 text-xs">Supported: .wav, .mp3, .m4a, .webm</p>
+                <p className="text-slate-500 text-xs">Maks 10MB</p>
               </div>
               <input type="file" accept="audio/*" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
               <button
