@@ -30,6 +30,7 @@ def analyze_with_praat(wav_path: str):
         sound = parselmouth.Sound(wav_path)
         praat.call(sound, "Scale intensity", 75.0)
 
+        # Ekstraksi Pitch
         pitch = praat.call(sound, "To Pitch", 0.0, 50, 1000) 
         f0_mean = praat.call(pitch, "Get mean", 0, 0, "Hertz")
         f0_min = praat.call(pitch, "Get minimum", 0, 0, "Hertz", "Parabolic")
@@ -38,21 +39,20 @@ def analyze_with_praat(wav_path: str):
         if math.isnan(f0_mean) or f0_mean <= 0:
             return None
 
-        # Hitung Range F0 
+        # Hitung Range F0
         range_f0 = f0_max - f0_min
 
-        # Jitter: Variasi dalam frekuensi (ketidakstabilan)
+        # Jitter: Variasi frekuensi
         point_process = praat.call(sound, "To PointProcess (periodic, cc)", 50, 1000)
         jitter = praat.call(point_process, "Get jitter (local)", 0, 0, 0.0001, 0.02, 1.3) * 100
         
-        # HNR (Harmonicity): Kebersihan suara vs Noise
+        # HNR: Kebersihan suara
         hnr = praat.call(sound, "To Harmonicity (cc)", 0.01, 50, 0.1, 1.0)
         hnr_mean = praat.call(hnr, "Get mean", 0, 0)
 
-        # --- LOGIKA SKORING SESUAI PANDUAN REVISI ---
         ai_points = 0
         
-        if f0_max > 800:
+        if f0_max > 300:
             ai_points += 1
         
         if range_f0 > 400:
@@ -118,4 +118,4 @@ async def detect_voice(file: UploadFile = File(...)):
 
 @app.get("/")
 def root():
-    return {"message": "AI Voice Detector v16 (F0 Max Update) Ready"}
+    return {"message": "AI Voice Detector v17 (F0 Max 300Hz) Ready"}
