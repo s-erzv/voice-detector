@@ -8,6 +8,7 @@ interface DetectionResult {
   status: string;
   score: number;
   F0_mean: number;
+  F0_max: number; // Update ke F0_max
   HNR_mean: number;
   rangeF0: number;
   jitter_local: number;
@@ -107,6 +108,10 @@ const VoiceDetector = () => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert("File terlalu besar! Maksimal 10MB.");
+        return;
+      }
       setResult(null);
       uploadAudio(file);
     }
@@ -137,13 +142,12 @@ const VoiceDetector = () => {
           <div className="inline-flex p-3 bg-indigo-500/10 rounded-2xl mb-2">
             <Activity className="w-8 h-8 text-indigo-400" />
           </div>
-          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent ">
+          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
             AI Voice Detector
           </h1>
-          <p className="text-slate-500 text-sm tracking-widest font-medium ">Detect. Verify. Audit.</p>
+          <p className="text-slate-500 text-sm tracking-widest font-medium">Detect. Verify. Audit.</p>
         </div>
 
-        {/* Tab Switcher */}
         <div className="flex p-1 bg-slate-900 border border-slate-800 rounded-xl max-w-[300px] mx-auto">
           <button 
             onClick={() => { setActiveTab('live'); setResult(null); }}
@@ -159,7 +163,6 @@ const VoiceDetector = () => {
           </button>
         </div>
 
-        {/* Action Container */}
         <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
           {activeTab === 'live' ? (
             <div className="space-y-6">
@@ -172,7 +175,7 @@ const VoiceDetector = () => {
                 >
                   {isLoading ? <Loader2 className="w-12 h-12 animate-spin" /> : isRecording ? <Square className="w-12 h-12 fill-current animate-pulse" /> : <Mic className="w-12 h-12" />}
                 </button>
-                <p className={`mt-6 text-xs font-black tracking-[0.2em]  ${isRecording ? 'text-red-400 animate-pulse' : 'text-slate-500'}`}>
+                <p className={`mt-6 text-xs font-black tracking-[0.2em] ${isRecording ? 'text-red-400 animate-pulse' : 'text-slate-500'}`}>
                   {isRecording ? "Scanning Frequency..." : isLoading ? "Deconstructing Audio..." : "Ready to Stream"}
                 </p>
               </div>
@@ -185,13 +188,13 @@ const VoiceDetector = () => {
               <div className="text-center space-y-1">
                 <h3 className="text-lg font-bold text-slate-200">Upload Recording</h3>
                 <p className="text-slate-500 text-xs">Supported: .wav, .mp3, .m4a, .webm</p>
-                <p className="text-slate-500 text-xs">Maks 10MB</p>
+                <p className="text-slate-500 text-xs font-bold">Max 10MB</p>
               </div>
               <input type="file" accept="audio/*" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isLoading}
-                className="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-black tracking-widest  transition-all border border-slate-700 disabled:opacity-50"
+                className="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-black tracking-widest transition-all border border-slate-700 disabled:opacity-50"
               >
                 {isLoading ? "Processing..." : "Select File"}
               </button>
@@ -199,7 +202,6 @@ const VoiceDetector = () => {
           )}
         </div>
 
-        {/* Result Area */}
         {result && (
           <div className="w-full bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500">
             <div className={`p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 ${result.status === "Human Voice" ? 'bg-gradient-to-br from-emerald-600/20 to-slate-900 border-b border-emerald-500/20' : 'bg-gradient-to-br from-orange-600/20 to-slate-900 border-b border-orange-500/20'}`}>
@@ -208,24 +210,24 @@ const VoiceDetector = () => {
                   {result.status === "Human Voice" ? <ShieldCheck className="w-8 h-8" /> : <AlertCircle className="w-8 h-8" />}
                 </div>
                 <div>
-                  <span className="text-[10px] font-black text-slate-400  tracking-widest">Audit Verdict</span>
-                  <h2 className="text-3xl font-black italic ">{result.status}</h2>
+                  <span className="text-[10px] font-black text-slate-400 tracking-widest">Audit Verdict</span>
+                  <h2 className="text-3xl font-black italic">{result.status}</h2>
                 </div>
               </div>
               <div className="bg-slate-950/50 p-4 rounded-2xl border border-white/5 text-center min-w-[120px]">
-                <span className="text-[10px] opacity-60 block font-bold mb-1  tracking-tighter text-slate-400">Score</span>
+                <span className="text-[10px] opacity-60 block font-bold mb-1 tracking-tighter text-slate-400">Probability</span>
                 <span className="text-3xl font-mono font-bold text-indigo-400">{(result.score * 100).toFixed(0)}%</span>
               </div>
             </div>
 
             <div className="p-8 grid grid-cols-2 md:grid-cols-3 gap-4 bg-slate-900/50">
-              <StatBox icon={<Activity size={14}/>} label="F0 MEAN" value={`${result.F0_mean} Hz`} />
+              <StatBox icon={<Activity size={14}/>} label="F0 MAX" value={`${result.F0_max} Hz`} />
               <StatBox icon={<BarChart3 size={14}/>} label="HNR MEAN" value={`${result.HNR_mean} dB`} />
               <StatBox icon={<Activity size={14}/>} label="JITTER" value={`${result.jitter_local}%`} />
               <StatBox icon={<BarChart3 size={14}/>} label="RANGE F0" value={`${result.rangeF0} Hz`} />
               <StatBox icon={<ShieldCheck size={14}/>} label="AI POINTS" value={`${result.ai_points}/4`} />
               <div className="md:col-span-1 bg-slate-950/30 p-4 rounded-2xl border border-slate-800 flex items-center justify-center">
-                 <span className="text-[10px] text-slate-600 font-black  tracking-tighter">Verified by Praat</span>
+                 <span className="text-[10px] text-slate-600 font-black tracking-tighter">Verified by Praat Engine v17</span>
               </div>
             </div>
           </div>
@@ -239,7 +241,7 @@ const StatBox = ({ label, value, icon }: { label: string, value: string | number
   <div className="bg-slate-950/50 p-4 rounded-2xl border border-slate-800 hover:border-indigo-500/30 transition-colors group">
     <div className="flex items-center space-x-2 mb-2 text-indigo-400/50 group-hover:text-indigo-400 transition-colors">
       {icon}
-      <span className="text-[10px] font-black tracking-widest ">{label}</span>
+      <span className="text-[10px] font-black tracking-widest">{label}</span>
     </div>
     <span className="text-lg font-bold text-slate-200 font-mono tracking-tight">{value}</span>
   </div>
